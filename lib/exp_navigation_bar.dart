@@ -11,32 +11,35 @@ const _defaultExpStyle = TextStyle(
 /// Explanation Navigation Bottom Bar
 /// items. [ExpNavigationItem].
 class ExpNavigationItem {
-  /// this [item] of navigation bar child [Row].
+  /// this [icon] of navigation bar child [Row].
   /// [exp] is Explanation of item.
   /// [badge] display badge item. like notification.
   /// [badgeCount] count of badge.
   const ExpNavigationItem({
     Key? key,
-    required this.item,
+    required this.icon,
     required this.exp,
+    this.color,
+    this.expStyle,
     bool? badge,
     int? badgeCount,
     Color? backgroundColor,
-    TextStyle? expStyle,
   })  : badge = badge ?? false,
         badgeCount = badgeCount ?? 0,
-        backgroundColor = backgroundColor ?? Colors.transparent,
-        expStyle = expStyle ?? _defaultExpStyle;
+        backgroundColor = backgroundColor ?? Colors.transparent;
 
   /// Explanation navigation item [Widget].
-  final Widget item;
+  final IconData icon;
+
+  /// Explanation navigation [icon] color
+  final Color? color;
 
   /// Explanation navigation item [String]
   /// text for explanation.
   final String exp;
 
   /// Style of explanation [TextStyle]
-  final TextStyle expStyle;
+  final TextStyle? expStyle;
 
   /// Display item badge. [bool]
   /// default false
@@ -78,10 +81,25 @@ class ExplainableWidget extends AnimatedWidget {
 
   int get badgeCount => expNavItem.badgeCount;
 
-  Widget get item => expNavItem.item;
+  Widget item(BuildContext context) {
+    final theme = Theme.of(context).bottomNavigationBarTheme;
+    return Icon(
+      expNavItem.icon,
+      color: expNavItem.color ?? theme.unselectedItemColor,
+    );
+  }
 
   String get exp => expNavItem.exp;
-  TextStyle get expStyle => expNavItem.expStyle;
+  TextStyle expStyle(BuildContext context) {
+    final theme = Theme.of(context).bottomNavigationBarTheme;
+    return expNavItem.expStyle ??
+        theme.selectedLabelStyle ??
+        const TextStyle(
+          color: Colors.black,
+          fontSize: 20.0,
+          fontWeight: FontWeight.bold,
+        );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,14 +108,14 @@ class ExplainableWidget extends AnimatedWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          _buildItem,
-          _buildExp,
+          _buildItem(context),
+          _buildExp(context),
         ],
       ),
     );
   }
 
-  Widget get _buildItem {
+  Widget _buildItem(context) {
     Widget? child;
     if (badge) {
       child = Badge(
@@ -116,10 +134,10 @@ class ExplainableWidget extends AnimatedWidget {
           ),
         ),
         showBadge: badgeCount != 0,
-        child: item,
+        child: item(context),
       );
     } else {
-      child = item;
+      child = item(context);
     }
     if (!anim) return child;
     return Opacity(
@@ -134,8 +152,8 @@ class ExplainableWidget extends AnimatedWidget {
     );
   }
 
-  Widget get _buildExp {
-    Widget child = Text(exp, style: expStyle);
+  Widget _buildExp(context) {
+    Widget child = Text(exp, style: expStyle(context));
     if (!anim) return const SizedBox();
     return Opacity(
       opacity: animValue.clamp(0.0, 1.0),
@@ -156,9 +174,8 @@ class ExpNavigationBar extends StatefulWidget {
     Key? key,
     required this.items,
     required this.onPress,
-    Color? backgroundColor,
-  })  : backgroundColor = backgroundColor ?? Colors.white,
-        assert(items.isNotEmpty, 'Items can not be empty'),
+    this.backgroundColor,
+  })  : assert(items.isNotEmpty, 'Items can not be empty'),
         super(key: key);
 
   /// Naviation bar items
@@ -166,7 +183,7 @@ class ExpNavigationBar extends StatefulWidget {
   final List<ExpNavigationItem> items;
 
   /// Color of navigation background [Color].
-  final Color backgroundColor;
+  final Color? backgroundColor;
 
   /// Onpress [Function] items.
   /// index [int].
@@ -179,7 +196,7 @@ class ExpNavigationBar extends StatefulWidget {
 class _Exp extends State<ExpNavigationBar> with TickerProviderStateMixin {
   late AnimationController controller;
   late Animation<double> anim;
-  int hAnim = 0;
+  int hAnim = -1;
 
   @override
   void initState() {
@@ -211,7 +228,7 @@ class _Exp extends State<ExpNavigationBar> with TickerProviderStateMixin {
 
   bool get _isAndoid => Platform.isAndroid;
 
-  Color get _backgroundColor => widget.backgroundColor;
+  Color? get _backgroundColor => widget.backgroundColor;
 
   void _onPressItem(int index) async {
     if (index == hAnim) return;
@@ -261,8 +278,16 @@ class _Exp extends State<ExpNavigationBar> with TickerProviderStateMixin {
   }
 
   BoxDecoration get _decoration {
+    final theme = Theme.of(context).bottomNavigationBarTheme;
     return BoxDecoration(
-      color: _backgroundColor,
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black,
+          blurStyle: BlurStyle.outer,
+          blurRadius: theme.elevation ?? 2.0,
+        )
+      ],
+      color: _backgroundColor ?? theme.backgroundColor,
     );
   }
 }

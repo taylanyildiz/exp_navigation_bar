@@ -28,21 +28,21 @@ class HomeScreen extends StatelessWidget {
         onPress: (index) {},
         items: const [
           ExpNavigationItem(
-            item: Icon(Icons.home),
+            icon: Icons.home,
             exp: 'Home',
           ),
           ExpNavigationItem(
-            item: Icon(Icons.add),
+            icon: Icons.add,
             exp: 'Add',
           ),
           ExpNavigationItem(
-            item: Icon(Icons.notifications),
+            icon: Icons.notifications,
             badge: true,
             badgeCount: 3,
             exp: 'Notifications',
           ),
           ExpNavigationItem(
-            item: Icon(Icons.person),
+            icon: Icons.person,
             exp: 'Profile',
           ),
         ],
